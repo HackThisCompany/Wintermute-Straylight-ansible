@@ -1,2 +1,2 @@
 ---
-# defaults file for Wintermute-Straylight-ansible
+ansible_python_interpreter: python3

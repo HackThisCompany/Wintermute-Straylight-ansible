@@ -3,4 +3,34 @@
   systemd:
       name: ntopng
       enabled: yes
-      state: restarted # not required. choices: reloaded;restarted;started;stopped. C(started)/C(stopped) are idempotent actions that will not run commands unless necessary. C(restarted) will always bounce the service. C(reloaded) will always reload.
+      state: restarted
+
+- name: Restart httpd
+  systemd:
+      name: httpd
+      enabled: yes
+      state: restarted
+
+- name: Restart postfix
+  systemd:
+      name: postfix
+      enabled: yes
+      state: restarted
+
+- name: Restart bolo
+  systemd:
+      name: bolo
+      enabled: yes
+      state: restarted
+
+- name: Restart free
+  systemd:
+      name: free
+      enabled: yes
+      state: restarted
+
+- name: Restart rsyslog
+  systemd:
+      name: rsyslog
+      enabled: yes
+      state: restarted

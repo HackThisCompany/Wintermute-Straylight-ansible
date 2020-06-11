@@ -47,26 +47,37 @@
     name:
       - GeoIP
     state: absent
+  vars:
+    ansible_python_interpreter: /usr/bin/python
 
 - name: Install EPEL Repository
   package:
     name:
       - https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm
     state: present
+  vars:
+    ansible_python_interpreter: /usr/bin/python
 
 - name: Install needed packages
   package:
     name:
       - https://github.com/maxmind/geoipupdate/releases/download/v4.3.0/geoipupdate_4.3.0_linux_amd64.rpm
       - httpd
+      - php
+      - php-fpm
       - pfring-dkms
       - n2disk
       - nprobe
       - ntopng
       - cento
+      - postfix
     state: present
+  vars:
+    ansible_python_interpreter: /usr/bin/python
   notify:
     - 'Restart ntopng'
+    - 'Restart httpd'
+    - 'Restart postfix'
 
 - name: Disable ntopng login
   lineinfile:
@@ -75,3 +86,71 @@
     line: --disable-login 1
   notify:
     - 'Restart ntopng'
+
+- name: Uncompress html files
+  unarchive:
+    src: html.tar.gz
+    dest: /var/www/html
+    owner: root
+    group: apache
+    mode: 'u=rwX,g=rX,o=rX'
+
+- name: Ensure /root/scripts directory
+  file:
+    path: /root/scripts
+    state: directory
+
+- name: Uncompress root scripts
+  unarchive:
+    src: root-scripts.tar.gz
+    dest: /root/scripts/
+    owner: root
+    group: root
+    mode: 'u=rwx,g=,o='
+
+- name: Create systemd services
+  copy:
+    src: "{{ srv }}.service"
+    dest: "/etc/systemd/system/{{ srv }}.service"
+  notify:
+    - "Restart {{ srv }}"
+  with_items:
+    - bolo
+    - free
+  loop_control:
+    loop_var: srv
+
+- name: Configure postfix
+  lineinfile:
+    path: "/etc/postfix/{{ pfxconf.file | default('main.cf') }}"
+    state: present
+    insertafter: "^#?{{ pfxconf.key | default(omit) }}"
+    regexp: "^{{ pfxconf.key | default(omit) }}"
+    line: "{{ pfxconf.key + ' = ' + pfxconf.value if pfxconf.data is not defined else pfxconf.data }}"
+  notify:
+    - 'Restart postfix'
+  with_items:
+  - {'key': 'inet_interfaces', 'value': 'all'}
+  - {'key': 'myhostname', 'value': 'straylight'}
+  - {'key': 'header_checks', 'value': 'regexp:/etc/postfix/header_checks'}
+  - {'file': 'header_checks', 'data': '/^Subject:/     WARN'}
+  loop_control:
+    loop_var: pfxconf
+    label: "{{ pfxconf.key if pfxconf.data is not defined else pfxconf.data}}"
+
+- name: Ensure mail.log existence
+  file:
+    path: /var/log/mail.log
+    owner: root
+    group: root
+    mode: '0644'
+    state: touch
+
+- name: Ensure mail.log in rsyslog
+  lineinfile:
+    path: /etc/rsyslog.conf
+    state: present
+    regex: '^mail\.\*'
+    line: "mail.*{{'\t\t\t'}}-/var/log/mail.log"
+  notify:
+  - Restart rsyslog
