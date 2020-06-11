@@ -1,0 +1,77 @@
+---
+- name: Add htop and atomic repos
+  yum_repository:
+    name: "{{ repo.name }}"
+    description: "{{ repo.description }}"
+    file: "{{ repo.file }}"
+    baseurl: "{{ repo.baseurl | default(omit) }}"
+    mirrorlist: "{{ repo.mirrorlist | default(omit) }}"
+    gpgcheck: yes
+    gpgkey: "{{ repo.gpgkey }}"
+    enabled: yes
+  with_items:
+  - {
+    'name': 'ntop',
+    'file': 'ntop',
+    'description': 'ntop repo',
+    'baseurl': 'http://packages.ntop.org/centos-stable/7/$basearch/',
+    'gpgkey': 'http://packages.ntop.org/centos-stable/RPM-GPG-KEY-deri'
+    }
+  - {
+    'name': 'ntop-noarch',
+    'file': 'ntop',
+    'description': 'ntop repo',
+    'baseurl': 'http://packages.ntop.org/centos-stable/7/noarch/',
+    'gpgkey': 'http://packages.ntop.org/centos-stable/RPM-GPG-KEY-deri'
+    }
+  - {
+    'name': 'atomic',
+    'file': 'atomic',
+    'description': 'CentOS / Red Hat Enterprise Linux 7 - atomic',
+    'mirrorlist': 'http://updates.atomicorp.com/channels/mirrorlist/atomic/centos-7-$basearch',
+    'gpgkey': [ 'https://www.atomicorp.com/RPM-GPG-KEY.art.txt', 'https://www.atomicorp.com/RPM-GPG-KEY.atomicorp.txt' ]
+    }
+  - {
+    'name': 'atomic-testing',
+    'file': 'atomic',
+    'description': 'CentOS / Red Hat Enterprise Linux 7 - atomic - (Testing)',
+    'mirrorlist': 'http://updates.atomicorp.com/channels/mirrorlist/atomic/centos-7-$basearch',
+    'gpgkey': [ 'https://www.atomicorp.com/RPM-GPG-KEY.art.txt', 'https://www.atomicorp.com/RPM-GPG-KEY.atomicorp.txt' ]
+    }
+  loop_control:
+    loop_var: repo
+    label: "{{ repo.name }}"
+
+- name: Uninstall conflicting packages (preinstalled in AmazonLinux2)
+  package:
+    name:
+      - GeoIP
+    state: absent
+
+- name: Install EPEL Repository
+  package:
+    name:
+      - https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm
+    state: present
+
+- name: Install needed packages
+  package:
+    name:
+      - https://github.com/maxmind/geoipupdate/releases/download/v4.3.0/geoipupdate_4.3.0_linux_amd64.rpm
+      - httpd
+      - pfring-dkms
+      - n2disk
+      - nprobe
+      - ntopng
+      - cento
+    state: present
+  notify:
+    - 'Restart ntopng'
+
+- name: Disable ntopng login
+  lineinfile:
+    path: /etc/ntopng/ntopng.conf
+    regex: "^--disable-login "
+    line: --disable-login 1
+  notify:
+    - 'Restart ntopng'

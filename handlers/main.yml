@@ -1,0 +1,6 @@
+---
+- name: Restart ntopng
+  systemd:
+      name: ntopng
+      enabled: yes
+      state: restarted # not required. choices: reloaded;restarted;started;stopped. C(started)/C(stopped) are idempotent actions that will not run commands unless necessary. C(restarted) will always bounce the service. C(reloaded) will always reload.

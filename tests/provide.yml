@@ -1,0 +1,5 @@
+- name: Provide
+  hosts: all
+  become: yes
+  roles:
+  - role: ../../Wintermute-Straylight-ansible
