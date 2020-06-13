@@ -1,0 +1,24 @@
+- name: Install compilation tools and screen dependencies
+  package:
+    name:
+      - autoconf
+      - libtool
+      - texinfo
+      - ncurses-devel
+    state: present
+  vars:
+    ansible_python_interpreter: /usr/bin/python
+
+- name: Install screen from source
+  unarchive:
+    src: "https://ftp.gnu.org/gnu/screen/screen-4.5.0.tar.gz"
+    dest: /tmp/
+    remote_src: yes
+
+- name: Compile screen
+  shell: |
+    cd /tmp/screen-4.5.0/
+    ./autogen.sh
+    ./configure && ./config.status
+    make && make install
+

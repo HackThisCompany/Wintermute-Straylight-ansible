@@ -154,3 +154,13 @@
     line: "mail.*{{'\t\t\t'}}-/var/log/mail.log"
   notify:
   - Restart rsyslog
+
+- name: Check if screen 4.5.0 is installed
+  shell: screen --version | fgrep -q 'Screen version 4.05.00 (GNU)'
+  register: screen
+  failed_when: no
+
+- name: Install screen
+  include_tasks:
+    file: install-screen.yml
+  when: screen.rc != 0
