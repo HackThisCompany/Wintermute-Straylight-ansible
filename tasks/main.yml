@@ -129,6 +129,7 @@
   with_items:
   - {'key': 'inet_interfaces', 'value': 'all'}
   - {'key': 'myhostname', 'value': 'straylight'}
+  - {'key': 'mynetworks', 'value': '{{ ( postfix_mynetworks + ["127.0.0.1/8"] ) | unique | join(", ") }}'}
   - {'key': 'header_checks', 'value': 'regexp:/etc/postfix/header_checks'}
   - {'file': 'header_checks', 'data': '/^Subject:/     WARN'}
   loop_control:

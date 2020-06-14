@@ -1,2 +1,7 @@
 ---
 ansible_python_interpreter: python3
+
+# Allow STMP Relay for common private networks
+postfix_mynetworks:
+  - "10.0.0.0/8"
+  - "192.168.0.0/16"
