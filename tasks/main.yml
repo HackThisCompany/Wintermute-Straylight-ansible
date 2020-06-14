@@ -6,8 +6,8 @@
     file: "{{ repo.file }}"
     baseurl: "{{ repo.baseurl | default(omit) }}"
     mirrorlist: "{{ repo.mirrorlist | default(omit) }}"
-    gpgcheck: yes
-    gpgkey: "{{ repo.gpgkey }}"
+    gpgcheck: "{{ 'yes' if repo.gpgkey is defined else 'no' }}"
+    gpgkey: "{{ repo.gpgkey | default(omit) }}"
     enabled: yes
   with_items:
   - {
@@ -28,15 +28,13 @@
     'name': 'atomic',
     'file': 'atomic',
     'description': 'CentOS / Red Hat Enterprise Linux 7 - atomic',
-    'mirrorlist': 'http://updates.atomicorp.com/channels/mirrorlist/atomic/centos-7-$basearch',
-    'gpgkey': [ 'https://www.atomicorp.com/RPM-GPG-KEY.art.txt', 'https://www.atomicorp.com/RPM-GPG-KEY.atomicorp.txt' ]
+    'baseurl': 'http://mirrors.thzhost.com/atomic/centos/7/$basearch'
     }
   - {
     'name': 'atomic-testing',
     'file': 'atomic',
     'description': 'CentOS / Red Hat Enterprise Linux 7 - atomic - (Testing)',
-    'mirrorlist': 'http://updates.atomicorp.com/channels/mirrorlist/atomic/centos-7-$basearch',
-    'gpgkey': [ 'https://www.atomicorp.com/RPM-GPG-KEY.art.txt', 'https://www.atomicorp.com/RPM-GPG-KEY.atomicorp.txt' ]
+    'baseurl': 'http://mirrors.thzhost.com/atomic/centos/7/$basearch'
     }
   loop_control:
     loop_var: repo
@@ -53,7 +51,7 @@
 - name: Install EPEL Repository
   package:
     name:
-      - https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm
+      - https://epel.ip-connect.info/epel-release-latest-7.noarch.rpm
     state: present
   vars:
     ansible_python_interpreter: /usr/bin/python
@@ -61,7 +59,6 @@
 - name: Install needed packages
   package:
     name:
-      - https://github.com/maxmind/geoipupdate/releases/download/v4.3.0/geoipupdate_4.3.0_linux_amd64.rpm
       - httpd
       - php
       - php-fpm
