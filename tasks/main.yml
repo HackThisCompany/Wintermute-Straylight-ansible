@@ -84,6 +84,14 @@
   notify:
     - 'Restart ntopng'
 
+- name: Enable ntopng community edition
+  lineinfile:
+    path: /etc/ntopng/ntopng.conf
+    regex: "^--community"
+    line: --community
+  notify:
+    - 'Restart ntopng'
+
 - name: Uncompress html files
   unarchive:
     src: html.tar.gz
