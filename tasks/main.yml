@@ -1,5 +1,6 @@
 ---
 - name: Add htop and atomic repos
+  become: yes
   yum_repository:
     name: "{{ repo.name }}"
     description: "{{ repo.description }}"
@@ -9,6 +10,8 @@
     gpgcheck: "{{ 'yes' if repo.gpgkey is defined else 'no' }}"
     gpgkey: "{{ repo.gpgkey | default(omit) }}"
     enabled: yes
+  vars:
+    ansible_python_interpreter: /usr/bin/python
   with_items:
   - {
     'name': 'ntop',
@@ -41,6 +44,7 @@
     label: "{{ repo.name }}"
 
 - name: Uninstall conflicting packages (preinstalled in AmazonLinux2)
+  become: yes
   package:
     name:
       - GeoIP
@@ -49,14 +53,16 @@
     ansible_python_interpreter: /usr/bin/python
 
 - name: Install EPEL Repository
+  become: yes
   package:
     name:
-      - https://epel.ip-connect.info/epel-release-latest-7.noarch.rpm
+    - https://fedora.cu.be/epel/epel-release-latest-7.noarch.rpm
     state: present
   vars:
     ansible_python_interpreter: /usr/bin/python
 
 - name: Install needed packages
+  become: yes
   package:
     name:
       - httpd
@@ -68,6 +74,7 @@
       - ntopng
       - cento
       - postfix
+      - python3
     state: present
   vars:
     ansible_python_interpreter: /usr/bin/python
@@ -77,6 +84,7 @@
     - 'Restart postfix'
 
 - name: Disable ntopng login
+  become: yes
   lineinfile:
     path: /etc/ntopng/ntopng.conf
     regex: "^--disable-login "
@@ -85,6 +93,7 @@
     - 'Restart ntopng'
 
 - name: Enable ntopng community edition
+  become: yes
   lineinfile:
     path: /etc/ntopng/ntopng.conf
     regex: "^--community"
@@ -93,6 +102,7 @@
     - 'Restart ntopng'
 
 - name: Uncompress html files
+  become: yes
   unarchive:
     src: html.tar.gz
     dest: /var/www/html
@@ -101,11 +111,13 @@
     mode: 'u=rwX,g=rX,o=rX'
 
 - name: Ensure /root/scripts directory
+  become: yes
   file:
     path: /root/scripts
     state: directory
 
 - name: Uncompress root scripts
+  become: yes
   unarchive:
     src: root-scripts.tar.gz
     dest: /root/scripts/
@@ -114,6 +126,7 @@
     mode: 'u=rwx,g=,o='
 
 - name: Create systemd services
+  become: yes
   copy:
     src: "{{ srv }}.service"
     dest: "/etc/systemd/system/{{ srv }}.service"
@@ -126,6 +139,7 @@
     loop_var: srv
 
 - name: Configure postfix
+  become: yes
   lineinfile:
     path: "/etc/postfix/{{ pfxconf.file | default('main.cf') }}"
     state: present
@@ -145,6 +159,7 @@
     label: "{{ pfxconf.key if pfxconf.data is not defined else pfxconf.data}}"
 
 - name: Ensure mail.log existence
+  become: yes
   file:
     path: /var/log/mail.log
     owner: root
@@ -153,6 +168,7 @@
     state: touch
 
 - name: Ensure mail.log in rsyslog
+  become: yes
   lineinfile:
     path: /etc/rsyslog.conf
     state: present
@@ -162,6 +178,7 @@
   - Restart rsyslog
 
 - name: Check if screen 4.5.0 is installed
+  become: yes
   shell: screen --version | fgrep -q 'Screen version 4.05.00 (GNU)'
   register: screen
   failed_when: no

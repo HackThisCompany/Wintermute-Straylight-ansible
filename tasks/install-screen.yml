@@ -1,4 +1,5 @@
 - name: Install compilation tools and screen dependencies
+  become: yes
   package:
     name:
       - autoconf
@@ -16,6 +17,7 @@
     remote_src: yes
 
 - name: Compile screen
+  become: yes
   shell: |
     cd /tmp/screen-4.5.0/
     ./autogen.sh
